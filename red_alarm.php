@@ -7,7 +7,12 @@ include_once('cities.inc.php');
 
 function getCityName($AreaCode='')
 {
-	return (!empty($GLOBALS['cities'][$AreaCode]) ? (', עיר: '.$GLOBALS['cities'][$AreaCode]) : '');
+	if (empty($GLOBALS['cities'][$AreaCode])) {
+		return "\n";
+	}
+	else {
+		return ', ערים:'."\n\t" . implode("\n\t", $GLOBALS['cities'][$AreaCode]) . "\n\n";
+	}
 }
 
 function fetchJSON()
@@ -25,7 +30,7 @@ function CheckOrefData()
 		$JSON = fetchJSON();
 
 		// Example output:
-		//$JSON = '{"id" : "1405853194651", "title" : "פיקוד העורף התרעה במרחב ", "data" : ["שפלה 175","שפלה 174", " עוטף עזה 230"]}';
+		//$JSON = '{"id" : "1405853194651", "title" : "פיקוד העורף התרעה במרחב ", "data" : ["שפלה 175","שפלה 119", "עוטף עזה 230"]}';
 
 		if (empty($JSON)) continue;
 
