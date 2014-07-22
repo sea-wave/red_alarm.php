@@ -2,6 +2,13 @@
 set_time_limit(0);
 date_default_timezone_set('Asia/Jerusalem');
 
+$GLOBALS['cities'] = array();
+include_once('cities.inc.php');
+
+function getCityName($AreaCode='')
+{
+	return (!empty($GLOBALS['cities'][$AreaCode]) ? (', עיר: '.$GLOBALS['cities'][$AreaCode]) : '');
+}
 
 function fetchJSON()
 {
@@ -12,14 +19,14 @@ function fetchJSON()
 // prints alarms of rocket attacks on Israel using php
 function CheckOrefData()
 {
-	$sOutFrmt = 'מרחב: %s, קוד מרחב: %s';
-
-
-	// Example output:
-	//$JSON = '{"id" : "1405853194651", "title" : "פיקוד העורף התרעה במרחב ", "data" : ["שפלה 175","שפלה 174", " עוטף עזה 666"]}';
+	$sOutFrmt = 'מרחב: %s, קוד מרחב: %s %s';
 
 	while (true) {
 		$JSON = fetchJSON();
+
+		// Example output:
+		//$JSON = '{"id" : "1405853194651", "title" : "פיקוד העורף התרעה במרחב ", "data" : ["שפלה 175","שפלה 174", " עוטף עזה 230"]}';
+
 		if (empty($JSON)) continue;
 
 		$arr = json_decode($JSON, true /* returned objects will be converted into associative arrays */);
@@ -31,14 +38,16 @@ function CheckOrefData()
 			$iTotal = count($arr['data']);
 			for ($i=0; $i<$iTotal; $i++) {
 				preg_match('/([\p{Hebrew}|\s]+).*?([\d]+)$/u', $arr['data'][$i], $arrMatches);
-				if (!empty($arrMatches) && (count($arrMatches) === 3)) { 
-					echo "\t" . sprintf($sOutFrmt ,trim($arrMatches[1]),$arrMatches[2])."\n";
+				if (!empty($arrMatches) && (count($arrMatches) === 3)) {
+					$AreaCode = $arrMatches[2];
+					$city = getCityName($AreaCode);
+					echo "\t" . sprintf($sOutFrmt ,trim($arrMatches[1]),$AreaCode, $city)."\n";
 				}
 			}
 			echo "\n";
 			flush();
-			
 		}
+
 		sleep(5);
 	}
 
