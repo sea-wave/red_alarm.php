@@ -5,6 +5,7 @@ date_default_timezone_set('Asia/Jerusalem');
 $GLOBALS['cities'] = array();
 include_once('cities.inc.php');
 
+
 function getCityName($AreaCode='')
 {
 	if (empty($GLOBALS['cities'][$AreaCode])) {
@@ -14,6 +15,24 @@ function getCityName($AreaCode='')
 		return ', ערים:'."\n\t" . implode("\n\t", $GLOBALS['cities'][$AreaCode]) . "\n\n";
 	}
 }
+
+
+function displayNotification($msg='')
+{
+	if (empty($msg)) return;
+
+	$title = 'אזעקה';
+	$cmd = '/usr/bin/notify-send ' . $title . ' '.escapeshellarg($msg) . ' -t 15000 2>&1';
+	$fp = popen($cmd, "r");
+/*
+	while(!feof($fp)) {
+		echo fread($fp, 1024);
+		flush();
+	}
+*/
+	fclose($fp);
+}
+
 
 function fetchJSON()
 {
@@ -25,6 +44,8 @@ function fetchJSON()
 function CheckOrefData()
 {
 	$sOutFrmt = 'מרחב: %s, קוד מרחב: %s %s';
+	$arrOptions = getopt("f:n");
+	$bDispNotifications = (isset($arrOptions['n']));
 
 	while (true) {
 		$JSON = fetchJSON();
@@ -38,7 +59,7 @@ function CheckOrefData()
 
 		if (!empty($arr['data'])) {
 
-			echo date('r') . "\n";
+			$buf = date('r') . "\n";
 
 			$iTotal = count($arr['data']);
 			for ($i=0; $i<$iTotal; $i++) {
@@ -46,11 +67,15 @@ function CheckOrefData()
 				if (!empty($arrMatches) && (count($arrMatches) === 3)) {
 					$AreaCode = $arrMatches[2];
 					$city = getCityName($AreaCode);
-					echo "\t" . sprintf($sOutFrmt ,trim($arrMatches[1]),$AreaCode, $city)."\n";
+					$buf .= "\t" . sprintf($sOutFrmt ,trim($arrMatches[1]),$AreaCode, $city)."\n";
 				}
 			}
-			echo "\n";
+			$buf .= "\n";
+			echo $buf;
 			flush();
+			if ($bDispNotifications) {
+				displayNotification($buf);
+			}
 		}
 
 		sleep(5);
